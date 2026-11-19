@@ -1,24 +1,19 @@
 resource "aws_security_group" "web_sg" {
-  name   = "web-sg-cicd"
-  vpc_id = aws_vpc.main.id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
+  name        = "web-sg-cicd-private"
+  description = "Security group para instancia en subred privada"
+  vpc_id      = aws_vpc.main.id
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = { Name = "web-sg-cicd-private" }
 }
 
 resource "aws_iam_role" "ec2_ecr_role" {
-  name = "ec2_ecr_readonly_role"
+  name = "ec2_ecr_readonly_role_v2"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -40,6 +35,56 @@ resource "aws_iam_role_policy_attachment" "ssm_managed" {
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "ec2_ecr_profile"
+  name = "ec2_ecr_profile_v2"
   role = aws_iam_role.ec2_ecr_role.name
+}
+
+resource "aws_iam_policy" "ssm_params_read_policy" {
+  name        = "ec2-ssm-params-read-policy"
+  description = "Permite a la EC2 leer únicamente los parámetros de su proyecto en SSM"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = "arn:aws:ssm:${var.region}:*:parameter/cicd-project/dev/*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_params_attach" {
+  role       = aws_iam_role.ec2_ecr_role.name
+  policy_arn = aws_iam_policy.ssm_params_read_policy.arn
+}
+
+resource "aws_iam_policy" "cloudwatch_logs_policy" {
+  name        = "ec2-cloudwatch-logs-policy"
+  description = "Permite a la EC2 enviar logs y métricas a CloudWatch"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = "${aws_cloudwatch_log_group.app_logs.arn}:*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cloudwatch_logs_attach" {
+  role       = aws_iam_role.ec2_ecr_role.name
+  policy_arn = aws_iam_policy.cloudwatch_logs_policy.arn
 }

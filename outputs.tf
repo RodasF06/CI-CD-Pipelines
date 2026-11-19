@@ -1,5 +1,6 @@
-output "public_ip" {
-  value = aws_instance.web_app.public_ip
+output "private_ip" {
+  value       = aws_instance.web_app.private_ip
+  description = "IP privada de la instancia dentro de la subred aislada"
 }
 
 output "ecr_repository_url" {

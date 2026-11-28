@@ -3,7 +3,7 @@ resource "aws_ecr_repository" "app_repo" {
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
-    scan_on_push = true 
+    scan_on_push = true
   }
 
   tags = {
@@ -13,13 +13,13 @@ resource "aws_ecr_repository" "app_repo" {
 }
 
 resource "aws_instance" "web_app" {
-  ami                  = "ami-0440d3b780d96b29d"
-  instance_type        = "t2.micro"
+  ami                    = "ami-0440d3b780d96b29d"
+  instance_type          = "t2.micro"
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
-  subnet_id            = aws_subnet.private.id
+  subnet_id              = aws_subnet.private.id
   vpc_security_group_ids = [aws_security_group.web_sg.id]
 
-user_data = <<-EOF
+  user_data = <<-EOF
               #!/bin/bash
               dnf update -y
               dnf install -y docker aws-cli

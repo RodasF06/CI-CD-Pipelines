@@ -1,6 +1,30 @@
-.terraform/
+# Terraform
+**/.terraform/*
 *.tfstate
-*.tfstate.backup
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+
+# Terraform local
 .terraformrc
 terraform.rc
+
+# Packer
+packer-manifest.json
+*.pkrvars.hcl
+*.pkrvars.json
+
+# Secrets y credenciales
 .env
+.env.*
+!.env.example
+.aws/
+*.pem
+*.key
+
+# Sistema operativo
+Thumbs.db
+.DS_Store
